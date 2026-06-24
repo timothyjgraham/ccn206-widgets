@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Entity Hunter</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .sent{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:14px 0}
+  .tok{padding:9px 13px;border-radius:10px;border:2px solid var(--line);background:#fff;font-size:1.02rem;cursor:pointer;transition:transform .08s,border-color .15s,background .15s}
+  .tok:hover{border-color:var(--teal)}
+  .tok:active{transform:scale(.96)}
+  .tok.sel{background:var(--teal-l);border-color:var(--teal);font-weight:700}
+  .tok.hit{background:var(--ok-bg);border-color:var(--ok);font-weight:700}
+  .tok.miss{border-color:var(--ok);border-style:dashed}
+  .tok.wrong{background:var(--no-bg);border-color:var(--no);text-decoration:line-through}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="game-title">Entity Hunter <span class="chip">MODULE 4</span></h1>
+  <p class="game-sub">A bot reads a message and pulls out the <strong>entities</strong> — the specific details it needs (places, dates, times, names, numbers, sizes…). <strong>Tap every entity</strong>, leave the rest, then Check. Feeds Assessment 2.</p>
+
+  <div class="topbar">
+    <div class="progress"><i id="fill"></i></div>
+    <span class="scorechip" id="score">0 / 5</span>
+  </div>
+
+  <div class="card" style="font-weight:600;font-size:1rem" id="prompt"></div>
+  <div class="sent" id="sent"></div>
+  <div id="fb" class="feedback hide"></div>
+  <div class="row">
+    <span class="muted" id="hint">Tap the details the bot would extract.</span>
+    <div>
+      <button class="choice" id="check" style="flex:0 0 auto;min-width:120px">Check</button>
+      <button class="btn-ghost hide" id="next">Next →</button>
+    </div>
+  </div>
+
+  <div id="end" class="win hide">
+    <div class="big" id="endBig"></div>
+    <p id="endMsg"></p>
+    <button class="btn-ghost" onclick="restart()">Play again</button>
+  </div>
+</div>
+
+<script>
+  // e:true = this token is an entity the bot should extract. Others are intent/filler distractors.
+  var ROUNDS=[
+    {prompt:"“Book a flight to Berlin next Friday”", toks:[{w:"Book"},{w:"a"},{w:"flight"},{w:"to"},{w:"Berlin",e:true},{w:"next Friday",e:true}], note:"“Book a flight” is the <i>intent</i>; Berlin (place) and next Friday (date) are the entities."},
+    {prompt:"“Order a large oat-milk latte for 10:30 am”", toks:[{w:"Order"},{w:"a"},{w:"large",e:true},{w:"oat-milk",e:true},{w:"latte"},{w:"for"},{w:"10:30 am",e:true}], note:"size, milk type and time are entities; “order … latte” is the intent."},
+    {prompt:"“Track my parcel to Cairns”", toks:[{w:"Track"},{w:"my"},{w:"parcel"},{w:"to"},{w:"Cairns",e:true}], note:"Only Cairns (a place) is extracted; the rest is the track-order intent."},
+    {prompt:"“Cancel the booking for Priya, 4 people, Saturday”", toks:[{w:"Cancel"},{w:"the"},{w:"booking"},{w:"for"},{w:"Priya",e:true},{w:"4",e:true},{w:"people"},{w:"Saturday",e:true}], note:"name, number and day are entities; “cancel the booking” is the intent."},
+    {prompt:"“Remind me to call mum tomorrow at 6 pm”", toks:[{w:"Remind"},{w:"me"},{w:"to call"},{w:"mum"},{w:"tomorrow",e:true},{w:"at"},{w:"6 pm",e:true}], note:"tomorrow (date) and 6 pm (time) are entities; the reminder action is the intent."}
+  ];
+  var i,score,sel,checked;
+  function el(id){return document.getElementById(id);}
+  function start(){i=0;score=0;el('end').classList.add('hide');render();}
+  function render(){
+    var r=ROUNDS[i]; sel=ROUNDS[i].toks.map(function(){return false;}); checked=false;
+    el('prompt').innerHTML=r.prompt;
+    var S=el('sent'); S.innerHTML='';
+    r.toks.forEach(function(t,k){
+      var b=document.createElement('button'); b.className='tok'; b.textContent=t.w;
+      b.onclick=function(){ if(checked)return; sel[k]=!sel[k]; b.classList.toggle('sel',sel[k]); };
+      S.appendChild(b);
+    });
+    el('fb').className='feedback hide';
+    el('check').classList.remove('hide'); el('next').classList.add('hide');
+    el('hint').textContent='Tap the details the bot would extract.';
+    el('fill').style.width=(i/ROUNDS.length*100)+'%';
+    el('score').textContent=score+' / '+ROUNDS.length;
+  }
+  function check(){
+    if(checked)return; checked=true;
+    var r=ROUNDS[i]; var toks=el('sent').children; var perfect=true;
+    r.toks.forEach(function(t,k){
+      var b=toks[k]; b.classList.remove('sel');
+      if(t.e && sel[k]){b.classList.add('hit');}
+      else if(t.e && !sel[k]){b.classList.add('miss');perfect=false;}
+      else if(!t.e && sel[k]){b.classList.add('wrong');perfect=false;}
+    });
+    if(perfect)score++;
+    var fb=el('fb'); fb.className='feedback '+(perfect?'ok':'no');
+    fb.innerHTML=(perfect?'✓ Perfect catch. ':'✗ Not quite — green-dashed = missed, struck-through = not an entity. ')+r.note;
+    el('check').classList.add('hide'); el('next').classList.remove('hide');
+    el('hint').textContent=''; el('score').textContent=score+' / '+ROUNDS.length;
+  }
+  function next(){i++;if(i>=ROUNDS.length){finish();return;}render();}
+  function finish(){
+    el('end').classList.remove('hide');
+    el('prompt').classList.add('hide'); el('sent').classList.add('hide'); el('fb').className='feedback hide';
+    el('check').classList.add('hide'); el('next').classList.add('hide'); el('hint').textContent='';
+    el('fill').style.width='100%';
+    el('endBig').textContent='🎯 '+score+' / '+ROUNDS.length;
+    el('endMsg').innerHTML = score>=4 ? 'Sharp. Spotting entities vs the intent is exactly the muscle you use to set up parameters in Dialogflow for A2.'
+      : 'Good start. Reminder: the <b>verb phrase</b> is usually the intent; the <b>specific details</b> (places, dates, names, sizes) are the entities. Try again?';
+  }
+  el('check').onclick=check; el('next').onclick=next;
+  function restart(){el('prompt').classList.remove('hide');el('sent').classList.remove('hide');start();}
+  start();
+</script>
+</body>
+</html>

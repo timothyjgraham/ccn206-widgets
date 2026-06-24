@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CCN206 — Bot Games</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .hub-head{text-align:center;margin-bottom:6px}
+  .hub-head h1{font-size:1.7rem;font-weight:800;margin:0}
+  .hub-head p{color:var(--muted);margin:6px 0 0}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:18px}
+  .gcard{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow);transition:transform .12s,box-shadow .12s}
+  .gcard:hover{transform:translateY(-3px);box-shadow:0 8px 26px rgba(8,69,78,.14)}
+  .gcard .mod{font-size:.68rem;font-weight:800;letter-spacing:.4px;color:#fff;background:var(--teal);align-self:flex-start;padding:2px 9px;border-radius:999px}
+  .gcard h3{margin:10px 0 2px;font-size:1.12rem}
+  .gcard .mech{font-size:.82rem;color:var(--muted);flex:1}
+  .gcard .desc{font-size:.9rem;margin:8px 0 12px}
+  .play{display:block;text-align:center;text-decoration:none;background:var(--teal);color:#fff;font-weight:700;padding:11px;border-radius:12px;transition:filter .15s}
+  .play:hover{filter:brightness(1.1)}
+  .wrap{max-width:860px}
+  .foot{text-align:center;color:var(--muted);font-size:.82rem;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hub-head">
+    <h1>🤖 CCN206 — Bot Games</h1>
+    <p>Bite-sized games for <em>Communicating with Bots</em>. Two minutes each. Play one on the bus.</p>
+  </div>
+  <div class="cards" id="cards"></div>
+  <p class="foot">Built for CCN206. Each game links to its module and the assessments. Have fun.</p>
+</div>
+<script>
+  var GAMES=[
+    {m:"Module 1",t:"Timeline Tango",mech:"Sequencing",d:"Order eight chatbots from ELIZA to ChatGPT.",f:"m1-timeline.html"},
+    {m:"Module 2",t:"Spot the Bot",mech:"Swipe-classifier",d:"Human or automated? Read the tells. (Feeds A1)",f:"m2-spot-the-bot.html"},
+    {m:"Module 3",t:"Mind the Machine",mech:"Two-bucket sort",d:"Politeness to a bot, or trusting it as “objective”?",f:"m3-mind-the-machine.html"},
+    {m:"Module 4",t:"Intent or Entity?",mech:"Tap-classify",d:"Goal, or extractable detail? (Feeds A2)",f:"intent-or-entity-sorter.html"},
+    {m:"Module 4",t:"Entity Hunter",mech:"Tap-to-highlight",d:"Find the entities a bot would extract. (Feeds A2)",f:"m4-entity-hunter.html"},
+    {m:"Module 5",t:"Conversation Sim",mech:"Branching, scored",d:"Pick the bot's reply; build a quality score. (Feeds A2)",f:"m5-conversation-sim.html"},
+    {m:"Module 6",t:"Scan Commander",mech:"Four-bucket sort",d:"Sort findings into the environmental-scan jobs. (Feeds A2)",f:"m6-scan-commander.html"},
+    {m:"Module 7",t:"Habitat Match",mech:"Matching",d:"Pair each helper-bot job to its platform.",f:"m7-habitat-match.html"},
+    {m:"Module 8",t:"Embodiment Sort",mech:"Classify + myth-bust",d:"How is it embodied — and is it really “sentient”?",f:"m8-embodiment-sort.html"}
+  ];
+  var C=document.getElementById('cards');
+  GAMES.forEach(function(g){
+    var d=document.createElement('div');d.className='gcard';
+    d.innerHTML='<span class="mod">'+g.m+'</span><h3>'+g.t+'</h3><div class="mech">'+g.mech+'</div><div class="desc">'+g.d+'</div><a class="play" href="'+g.f+'">Play →</a>';
+    C.appendChild(d);
+  });
+</script>
+</body>
+</html>

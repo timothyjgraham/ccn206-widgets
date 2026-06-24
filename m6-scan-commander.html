@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scan Commander</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+  .bk{padding:13px 10px;border:0;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;font-size:.92rem;line-height:1.25;text-align:center;transition:transform .08s,filter .15s}
+  .bk:hover{filter:brightness(1.08)} .bk:active{transform:scale(.97)} .bk:disabled{opacity:.5}
+  .bk small{display:block;font-weight:500;opacity:.85;font-size:.74rem;margin-top:2px}
+  .b1{background:#0C5F6A}.b2{background:#1c7a86}.b3{background:#3b4a57}.b4{background:#9a3b3b}
+  .tally{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:12px;font-size:.78rem;color:var(--muted)}
+  .tally div{background:#f7fafb;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+  .tally b{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="game-title">Scan Commander <span class="chip">MODULE 6</span></h1>
+  <p class="game-sub">An <strong>environmental scan</strong> has four jobs. Drop each finding into the right one. This is the half of A2 worth the most marks (Scan + Strategy = 50%).</p>
+
+  <div class="topbar">
+    <div class="progress"><i id="fill"></i></div>
+    <span class="scorechip" id="score">0 / 12</span>
+  </div>
+
+  <div class="card" style="font-size:1.05rem" id="card"></div>
+  <div id="fb" class="feedback hide"></div>
+
+  <div class="grid" id="btns">
+    <button class="bk b1" data-c="needs">👥 User needs<small>what users are trying to do</small></button>
+    <button class="bk b2" data-c="data">🗂️ Data readiness<small>is the info bot-ready?</small></button>
+    <button class="bk b3" data-c="comp">🔎 Competitor insights<small>how rivals' bots behave</small></button>
+    <button class="bk b4" data-c="risk">⚠️ Risks<small>how it could break / be abused</small></button>
+  </div>
+  <div class="row"><span></span><button class="btn-ghost hide" id="next">Next →</button></div>
+
+  <div class="tally"><div>👥 needs: <b id="tn">0</b></div><div>🗂️ data: <b id="td">0</b></div><div>🔎 competitor: <b id="tc">0</b></div><div>⚠️ risks: <b id="tr">0</b></div></div>
+
+  <div id="end" class="win hide">
+    <div class="big" id="endBig"></div>
+    <p id="endMsg"></p>
+    <button class="btn-ghost" onclick="restart()">Play again</button>
+  </div>
+</div>
+
+<script>
+  var ITEMS=[
+    {t:"Reddit threads show users can't find the refund policy.", c:"needs", w:"Mapping user friction — a clear user need."},
+    {t:"The FAQ page contradicts the policy PDF.", c:"data", w:"Contradictory sources = the bot isn't data-ready; it would hallucinate or conflict."},
+    {t:"A rival's bot hands off to a human when it's stuck.", c:"comp", w:"Competitor insight — note their fallback strategy."},
+    {t:"Users might try to make the bot say something offensive.", c:"risk", w:"A risk to map — adversarial user behaviour."},
+    {t:"People keep asking the same three questions on Facebook.", c:"needs", w:"Repeating themes = core user intents to design around."},
+    {t:"Key info is locked in a 60-page PDF, not structured.", c:"data", w:"Data-readiness gap — unstructured info is hard for a bot to retrieve."},
+    {t:"A competitor uses a friendly first-name persona.", c:"comp", w:"Competitor insight — benchmarking tone and persona."},
+    {t:"The topic attracts misinformation the bot must not validate.", c:"risk", w:"A societal/safety risk to design guardrails for."},
+    {t:"Google reviews complain about long phone wait times.", c:"needs", w:"User friction the bot could relieve — a need."},
+    {t:"Two pages on the site list different opening hours.", c:"data", w:"Inconsistent data — fix before the bot can answer reliably."},
+    {t:"Trolls could spam the bot to derail conversations.", c:"risk", w:"A risk — plan rate-limits / guardrails."},
+    {t:"A rival bot traps users in an endless menu loop.", c:"comp", w:"Competitor insight — what NOT to do (poor fallback design)."}
+  ];
+  var order,i,score,answered,tally;
+  function el(id){return document.getElementById(id);}
+  function start(){
+    order=ITEMS.map(function(_,k){return k;});
+    for(var a=order.length-1;a>0;a--){var b=Math.floor(Math.random()*(a+1));var t=order[a];order[a]=order[b];order[b]=t;}
+    i=0;score=0;answered=false;tally={needs:0,data:0,comp:0,risk:0};
+    el('end').classList.add('hide');el('btns').classList.remove('hide');
+    upd();render();
+  }
+  function upd(){el('tn').textContent=tally.needs;el('td').textContent=tally.data;el('tc').textContent=tally.comp;el('tr').textContent=tally.risk;}
+  function render(){
+    el('card').textContent='“'+ITEMS[order[i]].t+'”';
+    el('fb').className='feedback hide'; el('next').classList.add('hide');
+    [].forEach.call(el('btns').children,function(b){b.disabled=false;});
+    el('fill').style.width=(i/ITEMS.length*100)+'%';
+    el('score').textContent=score+' / '+ITEMS.length;
+    answered=false;
+  }
+  function pick(c){
+    if(answered)return; answered=true;
+    var it=ITEMS[order[i]]; var right=(c===it.c);
+    if(right){score++;} tally[it.c]++; upd();
+    var fb=el('fb'); fb.className='feedback '+(right?'ok':'no');
+    fb.innerHTML=(right?'✓ Correct. ':'✗ It belongs under <b>'+label(it.c)+'</b>. ')+it.w;
+    [].forEach.call(el('btns').children,function(b){b.disabled=true;});
+    el('score').textContent=score+' / '+ITEMS.length;
+    el('next').classList.remove('hide');
+  }
+  function label(c){return {needs:"👥 User needs",data:"🗂️ Data readiness",comp:"🔎 Competitor insights",risk:"⚠️ Risks"}[c];}
+  function next(){i++;if(i>=ITEMS.length){finish();return;}render();}
+  function finish(){
+    el('btns').classList.add('hide');el('card').classList.add('hide');el('fb').className='feedback hide';el('next').classList.add('hide');
+    el('fill').style.width='100%';
+    el('end').classList.remove('hide');
+    el('endBig').textContent='🧭 '+score+' / '+ITEMS.length;
+    el('endMsg').innerHTML = score>=10 ? 'Commander material. You can sort raw findings into needs / data / competitors / risks — which is precisely how to structure your A2 environmental scan.'
+      : 'Good effort. The four jobs: <b>user needs</b>, <b>data readiness</b>, <b>competitor insights</b>, <b>risks</b>. Re-run to lock them in.';
+  }
+  [].forEach.call(document.getElementById('btns').children,function(b){b.onclick=function(){pick(b.getAttribute('data-c'));};});
+  el('next').onclick=next;
+  function restart(){el('card').classList.remove('hide');start();}
+  start();
+</script>
+</body>
+</html>

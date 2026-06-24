@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conversation Sim</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .bubble{background:#eceff1;border-radius:14px;padding:10px 14px;margin:10px 0;max-width:92%;font-size:.98rem}
+  .opt{display:block;width:100%;text-align:left;margin:8px 0;padding:13px 15px;border:2px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;font-size:.97rem;transition:border-color .15s,transform .08s}
+  .opt:hover{border-color:var(--teal)}
+  .opt:active{transform:scale(.99)}
+  .opt:disabled{cursor:default}
+  .meter{height:10px;background:#eef1f2;border-radius:6px;overflow:hidden;margin:6px 0}
+  .meter>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#c62828,#e8a500,#2e7d32);transition:width .4s}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="game-title">Conversation Sim <span class="chip">MODULE 5</span></h1>
+  <p class="game-sub">You're tuning a <strong>university student-support bot</strong>. Pick the bot's reply at each turn — your choices build a <strong>conversation-quality score</strong>. Feeds Assessment 2 (Conversation Design = 25%).</p>
+
+  <div class="topbar">
+    <div class="progress"><i id="fill"></i></div>
+    <span class="scorechip" id="score">Quality: 0 / 8</span>
+  </div>
+
+  <div id="thread"></div>
+  <div id="opts"></div>
+  <div id="fb" class="feedback hide"></div>
+  <div class="row"><span></span><button class="btn-ghost hide" id="next">Next →</button></div>
+
+  <div id="end" class="win hide">
+    <div class="big" id="endBig"></div>
+    <p id="endMsg"></p>
+    <button class="btn-ghost" onclick="restart()">Play again</button>
+  </div>
+</div>
+
+<script>
+  var TURNS=[
+    {user:"i need help but i don't even know where to start 😩",
+     opts:[
+       {t:"Please state your student ID and the nature of your query.", p:0, f:"Cold and form-first — it ignores the emotion and adds friction. Weak onboarding."},
+       {t:"No worries — that's exactly what I'm here for. Are you stuck with enrolment, fees, timetables, or something else?", p:2, f:"Empathy + a scaffolded set of choices. Strong onboarding: it orients a lost user."},
+       {t:"I can help with enrolment, fees, timetables, IT, library, graduation, parking and 14 other services. Which one?", p:1, f:"Helpful but overwhelming — breaks the maxim of Quantity (too much at once)."}
+     ]},
+    {user:"the enrolment thing isn't working and i'm freaking out",
+     opts:[
+       {t:"Error 0x04: invalid session token.", p:0, f:"Jargon dump — breaks the maxim of Manner (be clear). Unusable for a stressed student."},
+       {t:"Have you tried turning it off and on again?", p:0, f:"Dismissive and generic — it doesn't acknowledge the panic or narrow the problem."},
+       {t:"Okay, let's slow it down. When you try to enrol, what happens — an error message, a blank page, or it won't let you pick units?", p:2, f:"Calms the user and narrows the problem with concrete options. Lovely repair move."}
+     ]},
+    {user:"i tried that, still broken, and the deadline is TODAY",
+     opts:[
+       {t:"Unfortunately there's nothing more I can do here.", p:0, f:"A dead end — no escalation, no path forward. This is where trust breaks."},
+       {t:"Because it's deadline-day I'm flagging this as urgent and connecting you to a human advisor now — and I'll pass on what you've already tried.", p:2, f:"Graceful escalation (human-in-the-loop) + reciprocity (won't make them repeat themselves)."},
+       {t:"Please email enrolment@uni.edu; replies take 3–5 business days.", p:0, f:"Ignores the urgency entirely — wrong response to a same-day deadline."}
+     ]},
+    {user:"ok… thank you",
+     opts:[
+       {t:"Bye.", p:0, f:"Too terse — no confirmation, no reference, no reassurance."},
+       {t:"You're now connected to Sam, who'll take it from here. Reference #2231. Anything I can line up while you wait?", p:2, f:"Confirmation + a reference + an open door. Textbook closing."},
+       {t:"Is there anything else? Anything else? Anything else?", p:0, f:"Glitchy repetition — breaks the maxim of Manner."}
+     ]}
+  ];
+  var i,score,answered;
+  function el(id){return document.getElementById(id);}
+  function start(){i=0;score=0;answered=false;el('end').classList.add('hide');el('thread').innerHTML='';render();}
+  function render(){
+    var T=TURNS[i];
+    var b=document.createElement('div'); b.className='bubble'; b.innerHTML='<strong>Student:</strong> '+T.user;
+    el('thread').appendChild(b);
+    var O=el('opts'); O.innerHTML='';
+    T.opts.forEach(function(o,k){
+      var btn=document.createElement('button'); btn.className='opt'; btn.textContent='“'+o.t+'”';
+      btn.onclick=function(){pick(k,btn);};
+      O.appendChild(btn);
+    });
+    el('fb').className='feedback hide'; el('next').classList.add('hide');
+    el('fill').style.width=(i/TURNS.length*100)+'%';
+    el('score').textContent='Quality: '+score+' / 8';
+    answered=false;
+  }
+  function pick(k,btn){
+    if(answered)return; answered=true;
+    var o=TURNS[i].opts[k]; score+=o.p;
+    var opts=el('opts').children;
+    for(var j=0;j<opts.length;j++){opts[j].disabled=true; if(j!==k)opts[j].style.opacity=.5;}
+    btn.style.borderColor = o.p===2?'var(--ok)':(o.p===1?'var(--gold)':'var(--no)');
+    btn.style.background = o.p===2?'var(--ok-bg)':(o.p===1?'#fff8e6':'var(--no-bg)');
+    // echo the bot's chosen reply into the thread
+    var rb=document.createElement('div'); rb.className='bubble'; rb.style.background='var(--teal-l)'; rb.style.marginLeft='auto'; rb.innerHTML='<strong>Bot:</strong> '+o.t;
+    el('thread').appendChild(rb);
+    var fb=el('fb'); fb.className='feedback '+(o.p===2?'ok':(o.p===1?'':'no'));
+    if(o.p===1){fb.style.background='#fff8e6';fb.style.border='1px solid var(--gold)';}else{fb.style.background='';fb.style.border='';}
+    fb.innerHTML=(o.p===2?'✓ +2  ':(o.p===1?'＋1  ':'+0  '))+o.f;
+    el('score').textContent='Quality: '+score+' / 8';
+    el('next').classList.remove('hide');
+  }
+  function next(){i++;if(i>=TURNS.length){finish();return;}render();}
+  function finish(){
+    el('opts').innerHTML=''; el('fb').className='feedback hide'; el('next').classList.add('hide');
+    el('fill').style.width='100%';
+    el('end').classList.remove('hide');
+    el('endBig').textContent='💬 '+score+' / 8';
+    el('endMsg').innerHTML = score>=7 ? '<b>Conversation Architect.</b> Empathy → narrowing → escalation → confirmation. That arc — and being able to <i>justify</i> each move — is what A2 rewards.'
+      : (score>=4 ? 'Promising. Look back at the +0 choices — usually they broke a Gricean maxim, missed an escalation, or left a dead-end.' : 'Worth another run. The best replies acknowledge emotion, keep the user moving, escalate when stuck, and confirm at the end.');
+  }
+  el('next').onclick=next;
+  function restart(){start();}
+  start();
+</script>
+</body>
+</html>
