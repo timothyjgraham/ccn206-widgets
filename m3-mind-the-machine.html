@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mind the Machine</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1 class="game-title">Mind the Machine <span class="chip">MODULE 3</span></h1>
+  <p class="game-sub">Two ways people relate to machines. <strong>CASA</strong> = treating it like a social being (politeness, feelings). <strong>Machine heuristic</strong> = trusting it <em>because</em> it's a machine (objective, accurate). Sort each reaction.</p>
+
+  <div class="topbar">
+    <div class="progress"><i id="fill"></i></div>
+    <span class="scorechip" id="score">0 / 8</span>
+  </div>
+
+  <div id="card" class="card"></div>
+  <div id="fb" class="feedback hide"></div>
+
+  <div class="cols">
+    <div class="col" style="border-color:var(--teal)"><h4>🤝 CASA<br><span class="muted" style="font-weight:500;text-transform:none;letter-spacing:0">treat it like a person</span></h4><div id="colA"></div></div>
+    <div class="col" style="border-color:#3b4a57"><h4>⚙️ Machine heuristic<br><span class="muted" style="font-weight:500;text-transform:none;letter-spacing:0">trust the machine</span></h4><div id="colB"></div></div>
+  </div>
+  <div class="btns" id="btns" style="margin-top:10px">
+    <button class="choice" id="pickA">Put in 🤝 CASA</button>
+    <button class="choice alt" id="pickB">Put in ⚙️ Machine heuristic</button>
+  </div>
+  <div class="row"><span></span><button class="btn-ghost hide" id="next">Next →</button></div>
+
+  <div id="end" class="win hide">
+    <div class="big" id="endBig"></div>
+    <p id="endMsg"></p>
+    <button class="btn-ghost" onclick="restart()">Play again</button>
+  </div>
+</div>
+
+<script>
+  // cat: 'A' = CASA, 'B' = machine heuristic.  (Concepts: Lee, 2024)
+  var ITEMS=[
+    {t:"I said “thank you” to Alexa without thinking.", c:'A', w:"A politeness script — applying a human social rule to a machine."},
+    {t:"I trust the bot's figure because “computers don't make mistakes.”", c:'B', w:"The machine heuristic: assuming objectivity and accuracy — even though bots <i>do</i> err and hallucinate."},
+    {t:"I felt guilty switching the little robot off.", c:'A', w:"Projecting feelings onto a machine — a classic CASA response."},
+    {t:"I assume the AI is neutral because “it has no agenda.”", c:'B', w:"Machine heuristic — but training data and design carry plenty of bias."},
+    {t:"I apologised to the self-checkout when I bumped it.", c:'A', w:"Treating an object as a social actor — pure CASA."},
+    {t:"I'd believe the app's calorie count over a waiter's guess.", c:'B', w:"Machine heuristic — trusting the machine's number as more “objective.”"},
+    {t:"I told the chatbot to “have a nice day.”", c:'A', w:"Social etiquette aimed at a non-social being — CASA."},
+    {t:"I expect the GPS to be right just because it's a machine.", c:'B', w:"Machine heuristic — until it confidently routes you into a lake."}
+  ];
+  var order,i,score,answered;
+  function start(){
+    order=ITEMS.map(function(_,k){return k;});
+    for(var a=order.length-1;a>0;a--){var b=Math.floor(Math.random()*(a+1));var t=order[a];order[a]=order[b];order[b]=t;}
+    i=0;score=0;answered=false;
+    document.getElementById('colA').innerHTML='';document.getElementById('colB').innerHTML='';
+    document.getElementById('end').classList.add('hide');
+    document.getElementById('btns').classList.remove('hide');
+    render();
+  }
+  function el(id){return document.getElementById(id);}
+  function render(){
+    var it=ITEMS[order[i]];
+    el('card').textContent='“'+it.t+'”';
+    el('fb').className='feedback hide'; el('next').classList.add('hide');
+    el('pickA').disabled=false; el('pickB').disabled=false;
+    el('fill').style.width=(i/ITEMS.length*100)+'%';
+    el('score').textContent=score+' / '+ITEMS.length;
+    answered=false;
+  }
+  function pick(cat){
+    if(answered)return; answered=true;
+    var it=ITEMS[order[i]]; var right=(cat===it.c);
+    if(right)score++;
+    var col=el(cat==='A'?'colA':'colB');
+    var chip=document.createElement('div'); chip.className='placed'; chip.style.borderColor=right?'var(--ok)':'var(--no)';
+    chip.style.background=right?'var(--ok-bg)':'var(--no-bg)';
+    chip.textContent=(right?'✓ ':'✗ ')+'“'+it.t.slice(0,28)+(it.t.length>28?'…':'')+'”';
+    col.appendChild(chip);
+    var fb=el('fb'); fb.className='feedback '+(right?'ok':'no');
+    fb.innerHTML=(right?'✓ Correct. ':'✗ Actually the other one. ')+it.w;
+    el('pickA').disabled=true; el('pickB').disabled=true;
+    el('score').textContent=score+' / '+ITEMS.length;
+    el('next').classList.remove('hide');
+  }
+  function next(){i++;if(i>=ITEMS.length){finish();return;}render();}
+  function finish(){
+    el('btns').classList.add('hide');el('card').classList.add('hide');el('fb').className='feedback hide';el('next').classList.add('hide');
+    el('fill').style.width='100%';
+    el('end').classList.remove('hide');
+    el('endBig').textContent='🧠 '+score+' / '+ITEMS.length;
+    el('endMsg').innerHTML = score>=7 ? 'Nicely sorted. The twist Lee (2024) flags: we do <i>both</i> — treat machines like people <b>and</b> over-trust them as objective. Designing for that tension is real HMC.'
+      : 'Close ones are close on purpose. The key idea: CASA = social rules applied to machines; machine heuristic = trusting machines <i>because</i> they’re machines. Try again?';
+  }
+  el('pickA').onclick=function(){pick('A');};
+  el('pickB').onclick=function(){pick('B');};
+  el('next').onclick=next;
+  function restart(){el('card').classList.remove('hide');start();}
+  start();
+</script>
+</body>
+</html>

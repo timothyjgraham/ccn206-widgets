@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Timeline Tango — bot history</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <h1 class="game-title">Timeline Tango <span class="chip">MODULE 1</span></h1>
+  <p class="game-sub">Use the ▲ ▼ arrows to arrange these chatbots from <strong>earliest to latest</strong>. Then hit <strong>Check order</strong>.</p>
+
+  <div id="list"></div>
+
+  <div class="row">
+    <span class="scorechip" id="score">— / 8 in place</span>
+    <div>
+      <button class="btn-ghost" id="shuffle" style="background:#6b7280">Shuffle</button>
+      <button class="choice" id="check" style="flex:0 0 auto;min-width:140px">Check order</button>
+    </div>
+  </div>
+
+  <div id="win" class="win hide" style="margin-top:14px">
+    <div class="big">🏆 Perfect timeline!</div>
+    <p>From ELIZA's 1966 word-mirroring to ChatGPT — you've got the through-line of bot history, which is exactly the foundation Assessment 1 builds on.</p>
+    <button class="btn-ghost" onclick="reset()">Play again</button>
+  </div>
+</div>
+
+<script>
+  // chronological truth (verified): year + one-line fact
+  var TRUTH=[
+    {n:"ELIZA",        y:1966, f:"First famous chatbot — mirrored your words, understood nothing (Weizenbaum, MIT)."},
+    {n:"PARRY",        y:1972, f:"Simulated paranoid schizophrenia; even “chatted” with ELIZA (Colby)."},
+    {n:"A.L.I.C.E.",   y:1995, f:"Pattern→template rules in AIML; won the Loebner Prize (Wallace)."},
+    {n:"SmarterChild", y:2001, f:"On AIM/MSN with 30M+ users — a preview of today’s assistants."},
+    {n:"Siri",         y:2011, f:"Voice AI hits the mainstream on the iPhone 4S."},
+    {n:"Alexa",        y:2014, f:"Amazon’s voice assistant arrives in the Echo speaker."},
+    {n:"Tay",          y:2016, f:"Microsoft’s bot learned toxic speech from Twitter in under a day."},
+    {n:"ChatGPT",      y:2022, f:"LLM chatbots go mainstream."}
+  ];
+  var order=[]; // working array of indices into TRUTH
+  var checked=false;
+
+  function shuffle(){
+    order=TRUTH.map(function(_,i){return i;});
+    for(var i=order.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=order[i];order[i]=order[j];order[j]=t;}
+    // avoid starting already-correct
+    if(order.every(function(v,i){return v===i;})) order.reverse();
+    checked=false; document.getElementById('win').classList.add('hide');
+    document.getElementById('score').textContent='— / 8 in place';
+    render();
+  }
+  function render(){
+    var L=document.getElementById('list'); L.innerHTML='';
+    order.forEach(function(idx,pos){
+      var b=TRUTH[idx];
+      var row=document.createElement('div'); row.className='tl-item';
+      if(checked){ row.className+= (idx===pos?' good':' bad'); }
+      var up=document.createElement('button'); up.className='mv'; up.textContent='▲'; up.setAttribute('aria-label','Move '+b.n+' earlier'); up.disabled=(pos===0); up.onclick=function(){mv(pos,-1);};
+      var dn=document.createElement('button'); dn.className='mv'; dn.textContent='▼'; dn.setAttribute('aria-label','Move '+b.n+' later'); dn.disabled=(pos===order.length-1); dn.onclick=function(){mv(pos,1);};
+      var name=document.createElement('div'); name.className='name'; name.textContent=b.n;
+      row.appendChild(up); row.appendChild(dn); row.appendChild(name);
+      if(checked){
+        var yr=document.createElement('div'); yr.className='yr'; yr.textContent=b.y; row.appendChild(yr);
+      }
+      L.appendChild(row);
+      if(checked){
+        var fact=document.createElement('div'); fact.className='sub-note'; fact.style.textAlign='left'; fact.style.margin='-2px 0 6px 4px'; fact.textContent=b.f; L.appendChild(fact);
+      }
+    });
+  }
+  function mv(pos,dir){
+    if(checked){checked=false;render();} // editing again clears marks
+    var np=pos+dir; if(np<0||np>=order.length)return;
+    var t=order[pos];order[pos]=order[np];order[np]=t; render();
+  }
+  function check(){
+    checked=true;
+    var correct=order.reduce(function(a,idx,pos){return a+(idx===pos?1:0);},0);
+    document.getElementById('score').textContent=correct+' / 8 in place';
+    render();
+    if(correct===8){ document.getElementById('win').classList.remove('hide'); }
+  }
+  function reset(){shuffle();}
+  document.getElementById('check').onclick=check;
+  document.getElementById('shuffle').onclick=shuffle;
+  shuffle();
+</script>
+</body>
+</html>

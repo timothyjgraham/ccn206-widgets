@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spot the Bot</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .acct{background:var(--card);border:2px solid var(--teal);border-radius:14px;padding:16px;box-shadow:var(--shadow);animation:pop .25s ease;text-align:left}
+  .acct .h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .av{width:42px;height:42px;border-radius:50%;background:#cfd8dc;display:flex;align-items:center;justify-content:center;font-size:1.3rem}
+  .handle{font-weight:800}
+  .meta{font-size:.8rem;color:var(--muted)}
+  .stats{font-size:.86rem;margin:6px 0}
+  .stats span{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin:3px 4px 0 0}
+  .post{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-top:8px;font-size:.92rem;font-style:italic}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="game-title">Spot the Bot <span class="chip">MODULE 2</span></h1>
+  <p class="game-sub">Real person or automated account? Judge each profile, then see the tell. <strong>Remember: no single signal is proof</strong> — you're weighing patterns. Feeds Assessment 1.</p>
+
+  <div class="topbar">
+    <div class="progress"><i id="fill"></i></div>
+    <span class="scorechip" id="score">0 / 8</span>
+    <span class="streak" id="streak">🔥 0</span>
+  </div>
+
+  <div id="stage"></div>
+
+  <div class="btns" id="btns" style="margin-top:12px">
+    <button class="choice" id="bHuman">🧑 Human</button>
+    <button class="choice alt" id="bBot">🤖 Bot</button>
+  </div>
+
+  <div id="fb" class="feedback hide"></div>
+  <div class="row"><span></span><button class="btn-ghost hide" id="next">Next →</button></div>
+
+  <div id="end" class="win hide">
+    <div class="big" id="endBig"></div>
+    <p id="endMsg"></p>
+    <button class="btn-ghost" onclick="restart()">Play again</button>
+  </div>
+</div>
+
+<script>
+  // All profiles are FICTIONAL / illustrative. Tells reflect documented bot-detection signals.
+  var DECK=[
+    {handle:"@SunnyMornings_88", av:"🌅", meta:"joined 2 weeks ago", stats:["240 posts/day","100% reshares","default-ish avatar"], post:"RT RT RT 🔁 BREAKING 🔁 RT", bot:true,
+      tell:"<b>Bot.</b> Extreme volume + only reshares (reverberation) + brand-new account. Classic amplifier."},
+    {handle:"@kaz_makes_pottery", av:"🏺", meta:"member since 2021", stats:["~3 posts/week","photos over 4 yrs","replies to friends"], post:"third firing cracked again 😭 anyone know a good clay for thermal shock?", bot:false,
+      tell:"<b>Human.</b> A long, varied history and genuine back-and-forth (reciprocity) — hard to fake at scale."},
+    {handle:"@Patriot_Eagle_Liberty77", av:"🦅", meta:"active only during the vote", stats:["#hashtag-stuffed","identical talking points","no personal posts"], post:"WAKE UP! #Rigged #DoYourResearch #Rigged #DoYourResearch", bot:true,
+      tell:"<b>Bot.</b> An <i>instrumental identity</i> riding one event with window-dressing hashtags and copy-paste lines."},
+    {handle:"@derek_plumbing_bne", av:"🔧", meta:"local business", stats:["answers customer DMs","job-site photos","the odd typo"], post:"back-to-back jobs in Paddington today, slow to reply sorry! ring the office", bot:false,
+      tell:"<b>Human.</b> Specific local detail, real customer service, imperfect timing — not automation."},
+    {handle:"@news_now_feed", av:"📰", meta:"bio: “automated headlines”", stats:["posts every 10 min","links to sources","openly labelled a bot"], post:"[AUTO] Council approves new ferry timetable — link", bot:true,
+      tell:"<b>Bot — but a benign one.</b> An openly-labelled news aggregator. Not all bots are malicious; intent and transparency matter."},
+    {handle:"@mia.travels", av:"✈️", meta:"member since 2019", stats:["irregular posting","context-rich replies","years of photos"], post:"missed the train in Lisbon lol, ended up at the best little pastéis place", bot:false,
+      tell:"<b>Human.</b> Irregular, specific, and responsive — the opposite of a scripted feed."},
+    {handle:"@GiveawayKing_Official", av:"🎁", meta:"joined 3 days ago", stats:["“DM to claim prize”","1000s of identical replies","stock photo"], post:"🎉 YOU WON! DM now to claim before it expires 🎉", bot:true,
+      tell:"<b>Bot.</b> Scam pattern: brand-new, identical mass replies, urgency, a too-good prize. Don't DM."},
+    {handle:"@tom_indie_dev", av:"💻", meta:"member since 2018", stats:["posts about one project","banter + replies","inconsistent timing"], post:"shipped the save-game feature at 2am, immediately found a bug. classic.", bot:false,
+      tell:"<b>Human.</b> A consistent personal story over time, self-deprecating banter — reads as a real dev."}
+  ];
+  var order, i, score, streak, answered;
+  function start(){
+    order=DECK.map(function(_,k){return k;});
+    for(var a=order.length-1;a>0;a--){var b=Math.floor(Math.random()*(a+1));var t=order[a];order[a]=order[b];order[b]=t;}
+    i=0;score=0;streak=0;answered=false;
+    document.getElementById('end').classList.add('hide');
+    document.getElementById('btns').classList.remove('hide');
+    render();
+  }
+  function el(id){return document.getElementById(id);}
+  function render(){
+    var d=DECK[order[i]];
+    el('stage').innerHTML='<div class="acct"><div class="h"><div class="av">'+d.av+'</div><div><div class="handle">'+d.handle+'</div><div class="meta">'+d.meta+'</div></div></div>'+
+      '<div class="stats">'+d.stats.map(function(s){return '<span>'+s+'</span>';}).join('')+'</div>'+
+      '<div class="post">'+d.post+'</div></div>';
+    el('fb').className='feedback hide'; el('next').classList.add('hide');
+    el('bHuman').disabled=false; el('bBot').disabled=false;
+    el('fill').style.width=(i/DECK.length*100)+'%';
+    el('score').textContent=score+' / '+DECK.length;
+    el('streak').textContent='🔥 '+streak;
+    answered=false;
+  }
+  function answer(saidBot){
+    if(answered)return; answered=true;
+    var d=DECK[order[i]]; var right=(saidBot===d.bot);
+    if(right){score++;streak++;} else {streak=0;}
+    var fb=el('fb'); fb.className='feedback '+(right?'ok':'no');
+    fb.innerHTML=(right?'✓ ':'✗ ')+d.tell;
+    el('bHuman').disabled=true; el('bBot').disabled=true;
+    el('score').textContent=score+' / '+DECK.length;
+    el('streak').textContent='🔥 '+streak;
+    el('next').classList.remove('hide');
+  }
+  function next(){ i++; if(i>=DECK.length){finish();return;} render(); }
+  function finish(){
+    el('btns').classList.add('hide'); el('fb').className='feedback hide'; el('next').classList.add('hide');
+    el('stage').innerHTML=''; el('fill').style.width='100%';
+    var e=el('end'); e.classList.remove('hide');
+    el('endBig').textContent='🕵️ '+score+' / '+DECK.length;
+    el('endMsg').textContent = score>=7 ? 'Sharp eye. You read the patterns — volume, reciprocity, history, transparency — instead of one signal. That judgement is exactly what A1 rewards.'
+      : (score>=5 ? 'Good instincts. Keep weighing patterns over single tells — and remember some bots are benign.' : 'Tells are slippery on purpose. Re-read Module 2 on mimicry, window-dressing and reverberation, then try again.');
+  }
+  el('bHuman').onclick=function(){answer(false);};
+  el('bBot').onclick=function(){answer(true);};
+  el('next').onclick=next;
+  function restart(){start();}
+  start();
+</script>
+</body>
+</html>

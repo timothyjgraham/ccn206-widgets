@@ -1,0 +1,69 @@
+/* CCN206 Games — shared design system */
+:root{
+  --teal:#0C5F6A; --teal-d:#08454e; --teal-l:#e3eef0;
+  --ink:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+  --ok:#2e7d32; --ok-bg:#e8f5e9; --no:#c62828; --no-bg:#fdecea;
+  --gold:#e8a500; --card:#f7fafb; --bg:#ffffff;
+  --r:14px; --shadow:0 1px 3px rgba(0,0,0,.08),0 6px 18px rgba(8,69,78,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink); background:var(--bg); padding:18px; line-height:1.45;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:600px;margin:0 auto}
+.game-title{font-size:1.3rem;font-weight:800;margin:0 0 2px;letter-spacing:-.2px}
+.game-title .chip{font-size:.62rem;font-weight:700;color:#fff;background:var(--teal);padding:2px 8px;border-radius:999px;vertical-align:middle;margin-left:8px;letter-spacing:.3px}
+.game-sub{margin:0 0 14px;color:var(--muted);font-size:.95rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0}
+.progress{flex:1;height:8px;background:#eef1f2;border-radius:6px;overflow:hidden}
+.progress > i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),#1c8a99);transition:width .35s ease}
+.scorechip{font-weight:700;font-size:.9rem;color:var(--teal-d);background:var(--teal-l);padding:5px 11px;border-radius:999px;white-space:nowrap}
+.streak{font-weight:700;font-size:.9rem;color:var(--gold)}
+.card{
+  background:var(--card);border:2px solid var(--teal);border-radius:var(--r);
+  padding:22px 18px;text-align:center;font-size:1.28rem;font-weight:700;margin:12px 0;
+  box-shadow:var(--shadow); animation:pop .25s ease;
+}
+@keyframes pop{from{transform:scale(.97);opacity:0}to{transform:scale(1);opacity:1}}
+.sub-note{font-size:.82rem;font-weight:500;color:var(--muted);margin-top:6px}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+.choice{
+  flex:1;min-width:130px;padding:15px 14px;font-size:1rem;font-weight:700;
+  border:0;border-radius:12px;background:var(--teal);color:#fff;cursor:pointer;
+  transition:transform .08s ease, filter .15s ease; box-shadow:var(--shadow);
+}
+.choice:hover{filter:brightness(1.08)}
+.choice:active{transform:scale(.97)}
+.choice.alt{background:#3b4a57}
+.choice:disabled{opacity:.55;cursor:default}
+.btn-ghost{padding:11px 20px;border:0;border-radius:12px;background:#374151;color:#fff;font-weight:700;cursor:pointer}
+.btn-ghost:hover{filter:brightness(1.1)}
+.feedback{margin-top:14px;padding:13px 15px;border-radius:12px;font-size:.97rem;animation:pop .2s ease}
+.feedback.ok{background:var(--ok-bg);border:1px solid var(--ok)}
+.feedback.no{background:var(--no-bg);border:1px solid var(--no)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+.win{background:var(--ok-bg);border:1px solid var(--ok);border-radius:var(--r);padding:18px;text-align:center;animation:pop .3s ease}
+.win .big{font-size:2.2rem;font-weight:800;color:var(--teal)}
+.win p{margin:8px 0 14px}
+.hide{display:none!important}
+.muted{color:var(--muted)}
+/* columns / buckets for sort games */
+.cols{display:flex;gap:10px;margin-top:8px}
+.col{flex:1;border:2px dashed var(--line);border-radius:var(--r);padding:8px;min-height:90px;transition:border-color .2s,background .2s}
+.col h4{margin:4px 0 8px;font-size:.85rem;text-transform:uppercase;letter-spacing:.4px;text-align:center;color:var(--teal-d)}
+.col .placed{font-size:.82rem;background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:5px 0;animation:pop .2s ease}
+/* timeline */
+.tl-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px;margin:7px 0;box-shadow:var(--shadow)}
+.tl-item .name{flex:1;font-weight:700}
+.tl-item .yr{font-weight:800;color:var(--teal)}
+.tl-item.good{border-color:var(--ok);background:var(--ok-bg)}
+.tl-item.bad{border-color:var(--no);background:var(--no-bg)}
+.mv{width:34px;height:30px;border:0;border-radius:8px;background:var(--teal-l);color:var(--teal-d);font-weight:800;cursor:pointer}
+.mv:hover{filter:brightness(.97)}
+.mv:disabled{opacity:.3;cursor:default}
+:focus-visible{outline:3px solid #1c8a99;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:480px){.card{font-size:1.12rem}.choice{min-width:110px}}
