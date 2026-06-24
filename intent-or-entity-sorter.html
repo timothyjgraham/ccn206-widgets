@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Intent or Entity? — sorter</title>
+<style>
+  :root{ --teal:#0C5F6A; --ink:#222; }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;margin:0;padding:20px;background:#fff;color:var(--ink)}
+  .wrap{max-width:560px;margin:0 auto}
+  h1{font-size:1.25rem;margin:0 0 4px}
+  p.sub{margin:0 0 14px;color:#555;font-size:.95rem}
+  .bar{height:8px;background:#eee;border-radius:5px;overflow:hidden;margin:10px 0}
+  .fill{height:100%;background:var(--teal);width:0;transition:width .3s}
+  .item{font-size:1.35rem;font-weight:700;text-align:center;padding:22px 16px;border:2px solid var(--teal);border-radius:12px;background:#f0f7f8;margin:12px 0}
+  .btns{display:flex;gap:10px}
+  button.choice{flex:1;padding:15px;font-size:1rem;font-weight:600;border:0;border-radius:10px;background:var(--teal);color:#fff;cursor:pointer;transition:transform .08s}
+  button.choice:hover{filter:brightness(1.08)}
+  button.choice:active{transform:scale(.97)}
+  .fb{margin-top:14px;padding:13px 15px;border-radius:10px;min-height:20px;font-size:.97rem}
+  .fb.ok{background:#e8f5e9;border:1px solid #2e7d32}
+  .fb.no{background:#fdecea;border:1px solid #c62828}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+  .score{color:#666;font-size:.95rem}
+  button.next{padding:11px 20px;border:0;border-radius:10px;background:#444;color:#fff;cursor:pointer;font-weight:600}
+  .hide{display:none}
+  .done{text-align:center;padding:10px}
+  .done .big{font-size:2rem;font-weight:800;color:var(--teal)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Intent or Entity?</h1>
+  <p class="sub">Tap whether each item is the user&rsquo;s overall goal (<strong>Intent</strong>) or a specific detail the bot extracts (<strong>Entity</strong>). Instant feedback, 6 quick rounds.</p>
+  <div class="bar"><div class="fill" id="fill"></div></div>
+
+  <div id="play">
+    <div class="item" id="item"></div>
+    <div class="btns">
+      <button class="choice" onclick="answer('Intent')">🎯 Intent <span style="opacity:.8">(the goal)</span></button>
+      <button class="choice" onclick="answer('Entity')">🧩 Entity <span style="opacity:.8">(a detail)</span></button>
+    </div>
+    <div class="fb" id="fb"></div>
+    <div class="row">
+      <span class="score" id="score">Score: 0 / 6</span>
+      <button class="next hide" id="next" onclick="nxt()">Next &rarr;</button>
+    </div>
+  </div>
+
+  <div id="end" class="done hide">
+    <div class="big" id="endScore"></div>
+    <p id="endMsg"></p>
+    <button class="next" onclick="restart()">&#8635; Play again</button>
+  </div>
+</div>
+
+<script>
+  var Q=[
+    {t:'"I want to book a flight"', a:'Intent', w:'the whole message is the goal (book_flight).'},
+    {t:'Berlin  (a destination)',   a:'Entity', w:'a specific detail the bot extracts (destination).'},
+    {t:'next Friday  (a date)',     a:'Entity', w:'an extracted detail (date).'},
+    {t:'"Track my order"',          a:'Intent', w:'the user’s goal (track_order).'},
+    {t:'large  (a coffee size)',    a:'Entity', w:'an extracted detail (size).'},
+    {t:'"I’d like to order a coffee"', a:'Intent', w:'the goal (order_coffee).'}
+  ];
+  var i=0, s=0, answered=false;
+  function $(id){return document.getElementById(id);}
+  function render(){
+    var q=Q[i];
+    $('item').textContent=q.t;
+    $('fb').className='fb'; $('fb').textContent='';
+    $('next').classList.add('hide');
+    $('fill').style.width=(i/Q.length*100)+'%';
+    $('score').textContent='Score: '+s+' / '+Q.length;
+    answered=false;
+  }
+  function answer(c){
+    if(answered) return; answered=true;
+    var q=Q[i], fb=$('fb');
+    if(c===q.a){ s++; fb.className='fb ok'; fb.textContent='✓ Correct — '+q.w; }
+    else { fb.className='fb no'; fb.textContent='✗ Not quite — it’s an '+q.a+'. Here, '+q.w; }
+    $('score').textContent='Score: '+s+' / '+Q.length;
+    $('next').classList.remove('hide');
+  }
+  function nxt(){
+    i++;
+    if(i>=Q.length){ finish(); return; }
+    render();
+  }
+  function finish(){
+    $('play').classList.add('hide');
+    $('fill').style.width='100%';
+    $('end').classList.remove('hide');
+    $('endScore').textContent='🏆  '+s+' / '+Q.length;
+    $('endMsg').textContent = s===Q.length ? 'Perfect — you’ve got the intent/entity split nailed. You’ll use exactly this when you build A2 in Dialogflow.'
+      : (s>=4 ? 'Solid. Remember: one message → one intent (the goal) + the details are entities.' : 'Worth another go — the goal is the intent; each specific detail is an entity.');
+  }
+  function restart(){ i=0; s=0; $('end').classList.add('hide'); $('play').classList.remove('hide'); render(); }
+  render();
+</script>
+</body>
+</html>
