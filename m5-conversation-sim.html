@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Conversation Sim</title>
+<title>Conversation Sim | CCN206 Module 5</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .bubble{background:#eceff1;border-radius:14px;padding:10px 14px;margin:10px 0;max-width:92%;font-size:.98rem}
-  .opt{display:block;width:100%;text-align:left;margin:8px 0;padding:13px 15px;border:2px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;font-size:.97rem;transition:border-color .15s,transform .08s}
+  .opt{display:block;width:100%;text-align:left;margin:8px 0;padding:13px 15px;border:2px solid var(--line-strong);color:var(--ink);border-radius:12px;background:#fff;cursor:pointer;font-size:.97rem;transition:border-color .15s,transform .08s}
   .opt:hover{border-color:var(--teal)}
   .opt:active{transform:scale(.99)}
   .opt:disabled{cursor:default}
@@ -16,56 +16,59 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<main class="wrap">
   <h1 class="game-title">Conversation Sim <span class="chip">MODULE 5</span></h1>
-  <p class="game-sub">You're tuning a <strong>university student-support bot</strong>. Pick the bot's reply at each turn — your choices build a <strong>conversation-quality score</strong>. Feeds Assessment 2 (Conversation Design = 25%).</p>
+  <p class="game-sub">You are designing a university student-support bot. Choose the bot's reply at each turn. Each choice adds to a conversation quality score. This game relates to Assessment 2 (Conversation Design, 25%).</p>
 
   <div class="topbar">
-    <div class="progress"><i id="fill"></i></div>
+    <div class="progress" aria-hidden="true"><i id="fill"></i></div>
     <span class="scorechip" id="score">Quality: 0 / 8</span>
   </div>
 
   <div id="thread"></div>
-  <div id="opts"></div>
+  <div id="opts" role="group" aria-label="Choose the bot's reply"></div>
   <div id="fb" class="feedback hide"></div>
-  <div class="row"><span></span><button class="btn-ghost hide" id="next">Next →</button></div>
+  <div class="row"><span></span><button type="button" class="btn-ghost hide" id="next">Next</button></div>
 
   <div id="end" class="win hide">
-    <div class="big" id="endBig"></div>
+    <h2 class="big" id="endBig" tabindex="-1"></h2>
     <p id="endMsg"></p>
-    <button class="btn-ghost" onclick="restart()">Play again</button>
+    <button type="button" class="btn-ghost" onclick="restart()">Play again</button>
   </div>
-</div>
+  <div id="sr" class="sr-only" aria-live="polite"></div>
+</main>
 
 <script>
+  // Fictional scenario. Scoring draws on Grice's maxims, onboarding, repair, escalation and reciprocity.
   var TURNS=[
     {user:"i need help but i don't even know where to start 😩",
      opts:[
-       {t:"Please state your student ID and the nature of your query.", p:0, f:"Cold and form-first — it ignores the emotion and adds friction. Weak onboarding."},
-       {t:"No worries — that's exactly what I'm here for. Are you stuck with enrolment, fees, timetables, or something else?", p:2, f:"Empathy + a scaffolded set of choices. Strong onboarding: it orients a lost user."},
-       {t:"I can help with enrolment, fees, timetables, IT, library, graduation, parking and 14 other services. Which one?", p:1, f:"Helpful but overwhelming — breaks the maxim of Quantity (too much at once)."}
+       {t:"Please state your student ID and the nature of your query.", p:0, f:"Cold and form-first. It ignores the student's stress and adds friction at the start, which makes for weak onboarding."},
+       {t:"No worries, that's what I'm here for. Are you stuck with enrolment, fees, timetables or something else?", p:2, f:"It acknowledges how the student feels and offers a short set of options. This is good onboarding: it orients a user who doesn't know where to start."},
+       {t:"I can help with enrolment, fees, timetables, IT, library, graduation, parking and 14 other services. Which one?", p:1, f:"Helpful, but too much at once. It breaks the maxim of Quantity by giving more information than the student needs."}
      ]},
     {user:"the enrolment thing isn't working and i'm freaking out",
      opts:[
-       {t:"Error 0x04: invalid session token.", p:0, f:"Jargon dump — breaks the maxim of Manner (be clear). Unusable for a stressed student."},
-       {t:"Have you tried turning it off and on again?", p:0, f:"Dismissive and generic — it doesn't acknowledge the panic or narrow the problem."},
-       {t:"Okay, let's slow it down. When you try to enrol, what happens — an error message, a blank page, or it won't let you pick units?", p:2, f:"Calms the user and narrows the problem with concrete options. Lovely repair move."}
+       {t:"Error 0x04: invalid session token.", p:0, f:"Technical jargon breaks the maxim of Manner (be clear). A stressed student can't act on this."},
+       {t:"Have you tried turning it off and on again?", p:0, f:"Dismissive and generic. It doesn't acknowledge the student's stress or narrow down the problem."},
+       {t:"Okay, let's slow down. When you try to enrol, what happens? Do you see an error message, a blank page, or can you not select units?", p:2, f:"It calms the student and narrows the problem with concrete options. This is a good repair move."}
      ]},
     {user:"i tried that, still broken, and the deadline is TODAY",
      opts:[
-       {t:"Unfortunately there's nothing more I can do here.", p:0, f:"A dead end — no escalation, no path forward. This is where trust breaks."},
-       {t:"Because it's deadline-day I'm flagging this as urgent and connecting you to a human advisor now — and I'll pass on what you've already tried.", p:2, f:"Graceful escalation (human-in-the-loop) + reciprocity (won't make them repeat themselves)."},
-       {t:"Please email enrolment@uni.edu; replies take 3–5 business days.", p:0, f:"Ignores the urgency entirely — wrong response to a same-day deadline."}
+       {t:"Unfortunately there's nothing more I can do here.", p:0, f:"A dead end, with no escalation and no way forward. This is where users lose trust."},
+       {t:"Because the deadline is today, I'm marking this as urgent and connecting you with a student adviser now. I'll pass on what you've already tried.", p:2, f:"It escalates to a human and passes on the context, so the student doesn't have to repeat themselves (reciprocity)."},
+       {t:"Please email the enrolment team. Replies take 3–5 business days.", p:0, f:"It ignores the urgency of a same-day deadline."}
      ]},
     {user:"ok… thank you",
      opts:[
-       {t:"Bye.", p:0, f:"Too terse — no confirmation, no reference, no reassurance."},
-       {t:"You're now connected to Sam, who'll take it from here. Reference #2231. Anything I can line up while you wait?", p:2, f:"Confirmation + a reference + an open door. Textbook closing."},
-       {t:"Is there anything else? Anything else? Anything else?", p:0, f:"Glitchy repetition — breaks the maxim of Manner."}
+       {t:"Bye.", p:0, f:"Too terse. There's no confirmation, no reference number and no reassurance."},
+       {t:"You're now connected to Sam, who'll take it from here. Your reference number is 2231. Is there anything I can help with while you wait?", p:2, f:"It confirms the handover, gives a reference number and offers further help. A good close."},
+       {t:"Is there anything else? Anything else? Anything else?", p:0, f:"Repetition like this looks like a glitch, and it breaks the maxim of Manner."}
      ]}
   ];
   var i,score,answered;
   function el(id){return document.getElementById(id);}
+  function say(msg){var s=el('sr');s.textContent='';setTimeout(function(){s.textContent=msg;},60);}
   function start(){i=0;score=0;answered=false;el('end').classList.add('hide');el('thread').innerHTML='';render();}
   function render(){
     var T=TURNS[i];
@@ -73,7 +76,7 @@
     el('thread').appendChild(b);
     var O=el('opts'); O.innerHTML='';
     T.opts.forEach(function(o,k){
-      var btn=document.createElement('button'); btn.className='opt'; btn.textContent='“'+o.t+'”';
+      var btn=document.createElement('button'); btn.type='button'; btn.className='opt'; btn.textContent='“'+o.t+'”';
       btn.onclick=function(){pick(k,btn);};
       O.appendChild(btn);
     });
@@ -94,21 +97,28 @@
     el('thread').appendChild(rb);
     var fb=el('fb'); fb.className='feedback '+(o.p===2?'ok':(o.p===1?'':'no'));
     if(o.p===1){fb.style.background='#fff8e6';fb.style.border='1px solid var(--gold)';}else{fb.style.background='';fb.style.border='';}
-    fb.innerHTML=(o.p===2?'✓ +2  ':(o.p===1?'＋1  ':'+0  '))+o.f;
+    fb.innerHTML=(o.p===2?'+2 points. ':(o.p===1?'+1 point. ':'0 points. '))+o.f;
     el('score').textContent='Quality: '+score+' / 8';
-    el('next').classList.remove('hide');
+    el('next').classList.remove('hide'); el('next').focus();
+    say(fb.textContent+' Quality score '+score+' of 8.');
   }
-  function next(){i++;if(i>=TURNS.length){finish();return;}render();}
+  function next(){
+    i++;if(i>=TURNS.length){finish();return;}
+    render(); el('opts').children[0].focus();
+    say('Turn '+(i+1)+' of '+TURNS.length+'. Student: '+TURNS[i].user);
+  }
   function finish(){
     el('opts').innerHTML=''; el('fb').className='feedback hide'; el('next').classList.add('hide');
     el('fill').style.width='100%';
     el('end').classList.remove('hide');
-    el('endBig').textContent='💬 '+score+' / 8';
-    el('endMsg').innerHTML = score>=7 ? '<b>Conversation Architect.</b> Empathy → narrowing → escalation → confirmation. That arc — and being able to <i>justify</i> each move — is what A2 rewards.'
-      : (score>=4 ? 'Promising. Look back at the +0 choices — usually they broke a Gricean maxim, missed an escalation, or left a dead-end.' : 'Worth another run. The best replies acknowledge emotion, keep the user moving, escalate when stuck, and confirm at the end.');
+    el('endBig').textContent='Quality: '+score+' / 8';
+    el('endMsg').textContent = score>=7 ? 'Well done. The strongest path acknowledges the student\'s feelings, narrows the problem, escalates when the bot is stuck and confirms at the end. For A2, be ready to justify each of those moves.'
+      : (score>=4 ? 'A reasonable result. Look back at the replies that scored 0. Most broke a Gricean maxim, missed a chance to escalate or left the student at a dead end.' : 'Worth another try. The best replies acknowledge the student\'s feelings, keep them moving, escalate when stuck and confirm at the end.');
+    el('endBig').focus();
+    say('Game over. '+el('endBig').textContent+'. '+el('endMsg').textContent);
   }
   el('next').onclick=next;
-  function restart(){start();}
+  function restart(){start(); el('opts').children[0].focus();}
   start();
 </script>
 </body>

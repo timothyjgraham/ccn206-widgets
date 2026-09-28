@@ -1,102 +1,112 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Habitat Match</title>
+<title>Habitat Match | CCN206 Module 7</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .match{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
   .col2{display:flex;flex-direction:column;gap:8px}
-  .pill{padding:13px 12px;border:2px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;font-weight:600;font-size:.94rem;text-align:center;transition:border-color .15s,background .15s,transform .08s}
+  .pill{padding:13px 12px;border:2px solid var(--line-strong);color:var(--ink);border-radius:12px;background:#fff;cursor:pointer;font-weight:600;font-size:.94rem;text-align:center;transition:border-color .15s,background .15s,transform .08s}
   .pill:hover{border-color:var(--teal)} .pill:active{transform:scale(.98)}
   .pill.sel{border-color:var(--teal);background:var(--teal-l)}
   .pill.done{border-color:var(--ok);background:var(--ok-bg);cursor:default;opacity:.85}
   .pill.bad{border-color:var(--no);background:var(--no-bg);animation:shake .3s}
   @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
-  .colhead{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:center;margin-bottom:2px}
+  .colhead{font-size:.72rem;font-weight:400;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:center;margin:0 0 2px}
 </style>
 </head>
 <body>
-<div class="wrap">
+<main class="wrap">
   <h1 class="game-title">Habitat Match <span class="chip">MODULE 7</span></h1>
-  <p class="game-sub">“Without habitat, there is no wildlife.” Match each helper-bot <strong>job</strong> to the <strong>platform</strong> where it thrives. Tap a job, then tap its platform.</p>
+  <p class="game-sub">Amir Shevat's chapter on bot platforms in <em>Designing Bots</em> (2017) opens with the line “Without habitat, there is no wildlife” (Wildlife Habitat Canada). Match each helper-bot job to the platform that suits it. Select a job, then select its platform.</p>
 
   <div class="topbar">
-    <div class="progress"><i id="fill"></i></div>
+    <div class="progress" aria-hidden="true"><i id="fill"></i></div>
     <span class="scorechip" id="score">0 / 5 matched</span>
   </div>
 
   <div class="match">
-    <div><div class="colhead">The job</div><div class="col2" id="jobs"></div></div>
-    <div><div class="colhead">The habitat</div><div class="col2" id="plats"></div></div>
+    <div role="group" aria-labelledby="hJobs"><h2 class="colhead" id="hJobs">The job</h2><div class="col2" id="jobs"></div></div>
+    <div role="group" aria-labelledby="hPlats"><h2 class="colhead" id="hPlats">The platform</h2><div class="col2" id="plats"></div></div>
   </div>
   <div id="fb" class="feedback hide"></div>
 
   <div id="end" class="win hide" style="margin-top:14px">
-    <div class="big" id="endBig"></div>
+    <h2 class="big" id="endBig" tabindex="-1"></h2>
     <p id="endMsg"></p>
-    <button class="btn-ghost" onclick="restart()">Play again</button>
+    <button type="button" class="btn-ghost" onclick="restart()">Play again</button>
   </div>
-</div>
+  <div id="sr" class="sr-only" aria-live="polite"></div>
+</main>
 
 <script>
   var PAIRS=[
-    {id:1, job:"Community moderation & roles", plat:"Discord", why:"Discord is built for community management, bots and custom roles."},
-    {id:2, job:"Team standups & workflows", plat:"Slack / Teams", why:"Workplace hubs — automate updates, polls and approvals where work happens."},
-    {id:3, job:"Quick reminders & file utilities", plat:"Telegram", why:"Telegram's bot ecosystem is full of lightweight personal utilities."},
-    {id:4, job:"Hands-free routines at home", plat:"Smart speaker (Alexa)", why:"Voice-first, screenless — routines and commands by speech."},
-    {id:5, job:"Cross-posting & automation", plat:"IFTTT", why:"“If this, then that” — chains actions across apps automatically."}
+    {id:1, job:"Community moderation and roles", plat:"Discord", why:"Discord is organised around community servers, and bots can be given permission to manage roles and moderate members."},
+    {id:2, job:"Team stand-ups and workflows", plat:"Slack / Teams", why:"Workplace chat tools, where bots and workflows can post updates, run polls and handle approvals."},
+    {id:3, job:"Quick reminders and file utilities", plat:"Telegram", why:"Telegram's Bot API supports many lightweight personal tools, such as reminders and file conversion."},
+    {id:4, job:"Hands-free routines at home", plat:"Smart speaker (Alexa)", why:"Voice-first and often screenless, so routines and commands are spoken."},
+    {id:5, job:"Cross-posting and automation", plat:"IFTTT", why:"IFTTT (If This Then That) links a trigger in one service to an action in another."}
   ];
   var sel,matched,wrong;
   function el(id){return document.getElementById(id);}
+  function say(msg){var s=el('sr');s.textContent='';setTimeout(function(){s.textContent=msg;},60);}
   function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
   function start(){
     sel=null;matched=0;wrong=0;
     el('end').classList.add('hide');el('fb').className='feedback hide';
     var J=el('jobs');J.innerHTML='';
     shuffle(PAIRS).forEach(function(p){
-      var b=document.createElement('button');b.className='pill';b.textContent=p.job;b.dataset.id=p.id;b.dataset.side='job';
+      var b=document.createElement('button');b.type='button';b.className='pill';b.textContent=p.job;b.dataset.id=p.id;b.dataset.side='job';b.setAttribute('aria-pressed','false');
       b.onclick=function(){tapJob(p.id,b);};J.appendChild(b);
     });
     var P=el('plats');P.innerHTML='';
     shuffle(PAIRS).forEach(function(p){
-      var b=document.createElement('button');b.className='pill';b.textContent=p.plat;b.dataset.id=p.id;b.dataset.side='plat';
+      var b=document.createElement('button');b.type='button';b.className='pill';b.textContent=p.plat;b.dataset.id=p.id;b.dataset.side='plat';b.setAttribute('aria-pressed','false');
       b.onclick=function(){tapPlat(p.id,b);};P.appendChild(b);
     });
     upd();
   }
   function upd(){el('score').textContent=matched+' / 5 matched';el('fill').style.width=(matched/5*100)+'%';}
-  function clearSel(){[].forEach.call(document.querySelectorAll('.pill.sel'),function(x){x.classList.remove('sel');});}
+  function clearSel(){[].forEach.call(document.querySelectorAll('.pill.sel'),function(x){x.classList.remove('sel');x.setAttribute('aria-pressed','false');});}
+  function mark(b){b.classList.add('sel');b.setAttribute('aria-pressed','true');}
+  function setDone(b){b.classList.add('done');b.removeAttribute('aria-pressed');b.setAttribute('aria-disabled','true');}
+  function firstOpen(side){return document.querySelector('.pill[data-side="'+side+'"]:not(.done)');}
   function tapJob(id,b){
     if(b.classList.contains('done'))return;
-    clearSel(); sel={id:id,side:'job'}; b.classList.add('sel');
+    clearSel(); sel={id:id,side:'job'}; mark(b);
+    say(b.textContent+' selected. Now choose its platform.');
   }
   function tapPlat(id,b){
     if(b.classList.contains('done'))return;
-    if(!sel){ clearSel(); sel={id:id,side:'plat'}; b.classList.add('sel'); return; }
-    if(sel.side==='plat'){ clearSel(); sel={id:id,side:'plat'}; b.classList.add('sel'); return; }
+    if(!sel || sel.side==='plat'){ clearSel(); sel={id:id,side:'plat'}; mark(b); say('Select a job first, then its platform.'); return; }
     // we have a selected job + tapped a platform
     var jobBtn=document.querySelector('.pill.sel[data-side="job"]');
     if(id===sel.id){
-      b.classList.add('done'); if(jobBtn)jobBtn.classList.add('done');
+      setDone(b); if(jobBtn)setDone(jobBtn);
       clearSel(); sel=null; matched++; upd();
       var p=PAIRS.filter(function(x){return x.id===id;})[0];
-      var fb=el('fb'); fb.className='feedback ok'; fb.innerHTML='✓ '+p.why;
-      if(matched===5) finish();
+      var fb=el('fb'); fb.className='feedback ok'; fb.innerHTML='Correct. '+p.why;
+      say('Correct: '+p.job+' goes with '+p.plat+'. '+p.why+' '+matched+' of 5 matched.');
+      if(matched===5){ finish(); }
+      else { var nj=firstOpen('job'); if(nj) nj.focus(); }
     } else {
       wrong++;
       b.classList.add('bad'); setTimeout(function(){b.classList.remove('bad');},350);
-      var fb2=el('fb'); fb2.className='feedback no'; fb2.innerHTML='✗ Not that habitat — try again.';
+      var fb2=el('fb'); fb2.className='feedback no'; fb2.innerHTML='Not that platform. Try again.';
+      say('Not that platform. Try again. '+(jobBtn?jobBtn.textContent+' is still selected.':''));
     }
   }
   function finish(){
     el('fb').className='feedback hide';
     el('end').classList.remove('hide');
-    el('endBig').textContent = wrong===0 ? '🌿 Flawless!' : '🌿 Matched!';
-    el('endMsg').innerHTML = (wrong===0?'Perfect run — ':'Done in '+(5+wrong)+' taps — ')+'a bot in the wrong habitat “shrivels and dies.” Affordances decide the fit, which is exactly how to choose where your A2 bot should live.';
+    el('endBig').textContent = 'All five matched';
+    el('endMsg').textContent = (wrong===0?'You made no incorrect matches. ':'You finished with '+wrong+' incorrect '+(wrong===1?'attempt':'attempts')+'. ')+'A platform’s affordances shape what a bot can do there and who it reaches. Keep this in mind when you choose a platform for your A2 bot.';
+    el('endBig').focus();
+    say('Game over. '+el('endBig').textContent+'. '+el('endMsg').textContent);
   }
-  function restart(){start();}
+  function restart(){start(); firstOpen('job').focus();}
   start();
 </script>
 </body>

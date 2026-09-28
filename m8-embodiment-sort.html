@@ -1,65 +1,68 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Embodiment Sort</title>
+<title>Embodiment Sort | CCN206 Module 8</title>
 <link rel="stylesheet" href="style.css">
 <style>
   .opts{display:flex;flex-direction:column;gap:9px;margin-top:6px}
-  .opt{padding:14px;border:2px solid var(--line);border-radius:12px;background:#fff;cursor:pointer;font-weight:700;font-size:.98rem;transition:border-color .15s,background .15s,transform .08s}
+  .opt{padding:14px;border:2px solid var(--line-strong);color:var(--ink);border-radius:12px;background:#fff;cursor:pointer;font-weight:700;font-size:.98rem;transition:border-color .15s,background .15s,transform .08s}
   .opt:hover{border-color:var(--teal)} .opt:active{transform:scale(.99)} .opt:disabled{cursor:default}
-  .phase{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--teal-d);font-weight:800;margin-top:4px}
+  .phase{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--teal-d);font-weight:800;margin:4px 0 0}
 </style>
 </head>
 <body>
-<div class="wrap">
+<main class="wrap">
   <h1 class="game-title">Embodiment Sort <span class="chip">MODULE 8</span></h1>
-  <p class="game-sub">A body lets a machine <strong>sense, act and be perceived</strong> — and that changes how we relate to it. Classify each agent, then bust some myths about “sentience.”</p>
+  <p class="game-sub">A body lets a machine sense, act and be perceived, and that changes how we relate to it. First decide how each agent is embodied. Then decide whether some claims about machine sentience are myth or fact.</p>
 
   <div class="topbar">
-    <div class="progress"><i id="fill"></i></div>
+    <div class="progress" aria-hidden="true"><i id="fill"></i></div>
     <span class="scorechip" id="score">0 / 10</span>
   </div>
 
-  <div class="phase" id="phase"></div>
+  <h2 class="phase" id="phase"></h2>
   <div class="card" style="font-size:1.1rem" id="card"></div>
-  <div class="opts" id="opts"></div>
+  <div class="opts" id="opts" role="group" aria-labelledby="phase"></div>
   <div id="fb" class="feedback hide"></div>
-  <div class="row"><span></span><button class="btn-ghost hide" id="next">Next →</button></div>
+  <div class="row"><span></span><button type="button" class="btn-ghost hide" id="next">Next</button></div>
 
   <div id="end" class="win hide">
-    <div class="big" id="endBig"></div>
+    <h2 class="big" id="endBig" tabindex="-1"></h2>
     <p id="endMsg"></p>
-    <button class="btn-ghost" onclick="restart()">Play again</button>
+    <button type="button" class="btn-ghost" onclick="restart()">Play again</button>
   </div>
-</div>
+  <div id="sr" class="sr-only" aria-live="polite"></div>
+</main>
 
 <script>
-  var BINS=["🦾 Physical body","🖥️ Virtual / social presence","📄 Just text — no presence"];
-  var MF=["🟣 Myth","🟢 Fact"];
+  var BINS=["Physical body","Virtual or social presence","Text only, no presence"];
+  var MF=["Myth","Fact"];
+  var P1="Part 1: How is it embodied?", P2="Part 2: Myth or fact?";
   var R=[
-    {phase:"Sort: how is it embodied?", q:"A robot vacuum (Roomba)", o:BINS, c:0, w:"Physical — it senses the room and moves through it (sensors + actuators)."},
-    {phase:"Sort: how is it embodied?", q:"A warehouse robot arm", o:BINS, c:0, w:"Physical — a real body acting in the world."},
-    {phase:"Sort: how is it embodied?", q:"A 3D avatar that gestures and speaks in VR", o:BINS, c:1, w:"Virtual/social — no real body, but a consistent perceptible presence."},
-    {phase:"Sort: how is it embodied?", q:"A chatbot with an animated face and voice", o:BINS, c:1, w:"Virtual/social — it performs a presence through face, voice and gesture."},
-    {phase:"Sort: how is it embodied?", q:"A plain email auto-reply", o:BINS, c:2, w:"No presence — just text out. (Where pure-text ChatGPT sits is debated!)"},
-    {phase:"Sort: how is it embodied?", q:"A command-line script", o:BINS, c:2, w:"No presence — it acts, but isn't perceived as a social/physical being."},
-    {phase:"Myth or fact?", q:"In 2022 a Google engineer publicly claimed the chatbot LaMDA was sentient.", o:MF, c:1, w:"Fact — Blake Lemoine made the claim and was later dismissed; Google and most experts rejected it."},
-    {phase:"Myth or fact?", q:"Most AI researchers agree today's LLM chatbots are conscious.", o:MF, c:0, w:"Myth — the consensus is they predict text, not feel."},
-    {phase:"Myth or fact?", q:"A fluent, human-like reply proves a system has feelings.", o:MF, c:0, w:"Myth — that's the “ELIZA effect”: we read a mind into pattern-matching."},
-    {phase:"Myth or fact?", q:"Giving a machine a physical body changes how we communicate with it.", o:MF, c:1, w:"Fact — embodiment mediates meaning, agency and our relationship with it."}
+    {phase:P1, q:"A robot vacuum (Roomba)", o:BINS, c:0, w:"Physical. It senses the room and moves through it using sensors and actuators."},
+    {phase:P1, q:"A warehouse robot arm", o:BINS, c:0, w:"Physical. It has a real body that acts in the world."},
+    {phase:P1, q:"A 3D avatar that gestures and speaks in VR", o:BINS, c:1, w:"Virtual or social. It has no physical body, but it has a consistent presence that people can see and hear."},
+    {phase:P1, q:"A chatbot with an animated face and voice", o:BINS, c:1, w:"Virtual or social. It creates a presence through face, voice and gesture."},
+    {phase:P1, q:"A plain email auto-reply", o:BINS, c:2, w:"No presence, just text. Where a text-only chatbot such as ChatGPT fits is open to debate."},
+    {phase:P1, q:"A command-line script", o:BINS, c:2, w:"No presence. It acts, but people don't perceive it as a social or physical being."},
+    {phase:P2, q:"In 2022 a Google engineer publicly claimed the chatbot LaMDA was sentient.", o:MF, c:1, w:"Fact. Blake Lemoine made the claim in June 2022. Google called it “wholly unfounded” and dismissed him in July 2022, citing breaches of its confidentiality policies. Most experts rejected the claim."},
+    {phase:P2, q:"Most AI researchers agree today's LLM chatbots are conscious.", o:MF, c:0, w:"Myth. Most researchers do not think current chatbots are conscious. A 2023 review by Butlin, Long and colleagues concluded that no current AI system is conscious, although the question is still debated."},
+    {phase:P2, q:"A fluent, human-like reply proves a system has feelings.", o:MF, c:0, w:"Myth. Reading a mind into fluent output is known as the ELIZA effect."},
+    {phase:P2, q:"Giving a machine a physical body changes how we communicate with it.", o:MF, c:1, w:"Fact, in the sense used in this module. A body shapes how we interpret a machine and how we relate to it."}
   ];
   var i,score,answered;
   function el(id){return document.getElementById(id);}
-  function start(){i=0;score=0;answered=false;el('end').classList.add('hide');render();}
+  function say(msg){var s=el('sr');s.textContent='';setTimeout(function(){s.textContent=msg;},60);}
+  function start(){i=0;score=0;answered=false;el('end').classList.add('hide');el('phase').classList.remove('hide');render();}
   function render(){
     var r=R[i];
     el('phase').textContent=r.phase;
     el('card').textContent=r.q;
     var O=el('opts');O.innerHTML='';
     r.o.forEach(function(label,k){
-      var b=document.createElement('button');b.className='opt';b.textContent=label;
+      var b=document.createElement('button');b.type='button';b.className='opt';b.textContent=label;
       b.onclick=function(){pick(k,b);};O.appendChild(b);
     });
     el('fb').className='feedback hide';el('next').classList.add('hide');
@@ -76,21 +79,28 @@
     b.style.borderColor=right?'var(--ok)':'var(--no)';b.style.background=right?'var(--ok-bg)':'var(--no-bg)';
     if(!right){opts[r.c].style.borderColor='var(--ok)';opts[r.c].style.background='var(--ok-bg)';}
     var fb=el('fb');fb.className='feedback '+(right?'ok':'no');
-    fb.innerHTML=(right?'✓ ':'✗ ')+r.w;
+    fb.innerHTML=(right?'Correct. ':'Not quite. The answer is “'+r.o[r.c]+'”. ')+r.w;
     el('score').textContent=score+' / '+R.length;
-    el('next').classList.remove('hide');
+    el('next').classList.remove('hide'); el('next').focus();
+    say(fb.textContent+' Score '+score+' of '+R.length+'.');
   }
-  function next(){i++;if(i>=R.length){finish();return;}render();}
+  function next(){
+    i++;if(i>=R.length){finish();return;}
+    render(); el('opts').children[0].focus();
+    say(R[i].phase+' Item '+(i+1)+' of '+R.length+': '+R[i].q);
+  }
   function finish(){
-    el('phase').textContent='';el('card').classList.add('hide');el('opts').innerHTML='';el('fb').className='feedback hide';el('next').classList.add('hide');
+    el('phase').textContent='';el('phase').classList.add('hide');el('card').classList.add('hide');el('opts').innerHTML='';el('fb').className='feedback hide';el('next').classList.add('hide');
     el('fill').style.width='100%';
     el('end').classList.remove('hide');
-    el('endBig').textContent='🤖 '+score+' / '+R.length;
-    el('endMsg').innerHTML = score>=8 ? 'Sharp. Embodiment is about how a body mediates meaning — and fluency isn\'t feeling. That clear-eyed view is the note CCN206 ends on.'
-      : 'Good run. Two ideas to keep: embodiment = sense + act + be perceived; and a convincing reply ≠ a conscious mind (the ELIZA effect). Try again?';
+    el('endBig').textContent='Score: '+score+' / '+R.length;
+    el('endMsg').textContent = score>=8 ? 'Well done. A body shapes how we relate to a machine, and a fluent reply is not evidence of feelings.'
+      : 'Two ideas to keep in mind: embodiment means sensing, acting and being perceived, and a convincing reply is not evidence of a conscious mind (the ELIZA effect). Try again?';
+    el('endBig').focus();
+    say('Game over. '+el('endBig').textContent+'. '+el('endMsg').textContent);
   }
   el('next').onclick=next;
-  function restart(){el('card').classList.remove('hide');start();}
+  function restart(){el('card').classList.remove('hide');start();el('opts').children[0].focus();}
   start();
 </script>
 </body>
