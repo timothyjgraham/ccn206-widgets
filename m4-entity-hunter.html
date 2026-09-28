@@ -52,7 +52,7 @@
     {prompt:"“Order a large oat-milk latte for 10:30 am”", toks:[{w:"Order"},{w:"a"},{w:"large",e:true},{w:"oat-milk",e:true},{w:"latte",e:true},{w:"for"},{w:"10:30 am",e:true}], note:"The intent is ordering a coffee. The size (large), milk (oat-milk), drink (latte) and time (10:30 am) are entities."},
     {prompt:"“Track my parcel to Cairns”", toks:[{w:"Track"},{w:"my"},{w:"parcel"},{w:"to"},{w:"Cairns",e:true}], note:"Only Cairns (a place) is an entity. The rest expresses the track-parcel intent."},
     {prompt:"“Cancel the booking for Priya, 4 people, Saturday”", toks:[{w:"Cancel"},{w:"the"},{w:"booking"},{w:"for"},{w:"Priya",e:true},{w:"4",e:true},{w:"people"},{w:"Saturday",e:true}], note:"The name (Priya), number (4) and day (Saturday) are entities. “Cancel the booking” is the intent."},
-    {prompt:"“Remind me to call mum tomorrow at 6 pm”", toks:[{w:"Remind"},{w:"me"},{w:"to call"},{w:"mum"},{w:"tomorrow",e:true},{w:"at"},{w:"6 pm",e:true}], note:"Tomorrow (a date) and 6 pm (a time) are the entities here, and setting a reminder is the intent. A fuller reminder bot might also capture “call mum” as the reminder text."}
+    {prompt:"“Remind me to call mum tomorrow at 6 pm”", toks:[{w:"Remind"},{w:"me"},{w:"to call"},{w:"mum",n:true},{w:"tomorrow",e:true},{w:"at"},{w:"6 pm",e:true}], note:"Tomorrow (a date) and 6 pm (a time) are the entities here, and setting a reminder is the intent. “mum” counts either way: a simple reminder bot would leave it inside the reminder text, but a fuller one might capture the person as a separate detail."}
   ];
   var i,score,sel,checked;
   function el(id){return document.getElementById(id);}
@@ -80,6 +80,7 @@
       var b=toks[k]; b.classList.remove('sel'); b.removeAttribute('aria-pressed'); b.disabled=true;
       if(t.e && sel[k]){b.classList.add('hit');}
       else if(t.e && !sel[k]){b.classList.add('miss');perfect=false;missed.push(t.w);}
+      else if(t.n){b.style.borderStyle='dotted'; if(sel[k]) b.setAttribute('aria-label',t.w+' (either answer accepted)');}
       else if(!t.e && sel[k]){b.classList.add('wrong');perfect=false;wrong.push(t.w);}
     });
     if(perfect)score++;
